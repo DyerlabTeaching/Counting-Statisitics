@@ -1,5 +1,6 @@
 # Topic Title
 
+![](media/)
 
 ## Impetus
 
