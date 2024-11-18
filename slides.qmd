@@ -450,13 +450,13 @@ There are a few different methods for estimating linear regression models via no
 
 If you need to do non-parametric regression, come see me and we'll spend a bit of time getting the foundation set for it.
 
-## Non-Parametric T-Test: Mann-Whitney {.smaller}
+## Non-Parametric T-Test: Wilcoxon Test
 
 
 This is an extension of the `t-test` for the equivalence of the mean values of two data sets (e.g., $H_O: \bar{x} = \bar{y}$).  
 
 
-## Mann-Whitney Assumptions
+## Wilcoxon Test Assumptions
 
 This approach has the following assumptions:
 
@@ -465,7 +465,7 @@ This approach has the following assumptions:
 3. The measurement scale for each variable is at least ordinal (e.g., you can put them in order).  
 
 
-## Example Data - Mann-Whitney
+## Example Data 
 
 ```{r}
 mtcars |>
@@ -474,19 +474,83 @@ mtcars |>
   mutate( Transmission = fct_recode( Transmission, "Automatic"="0", "Manual"="1")) -> data
 
 data |>
-  ggplot( aes(Transmission, MPG) )  + 
-  geom_boxplot( notch=TRUE )
+  ggplot( aes(MPG, fill=Transmission) )  + 
+  geom_density( alpha = 0.5 )
+```
+
+
+## Wilcoxon Test 
+
+To test this, we use the Wilcoxon Rank Sum test.  The signature of this test is:
+
+![](media/Wilcoxon_signature.png) 
+
+
+## Wilcoxon Test
+
+This will take the full set of data, assign them ranked values, and then determine if the ranked values are randomly distributed between the two groups.
+
+```{r}
+fit <- wilcox.test( MPG ~ Transmission, data=data)
+fit 
+```
+
+
+## Contained Values
+
+
+As for other analyses, the object returned has a number of elements that may be helpful in writing about the analysis.
+
+```{r}
+names(fit)
 ```
 
 
 
 
+## Non-Parametric ANOVA - Kruskal-Wallis
+
+The Kruskal-Wallis test is an extension on the Wilcoxon test in the same way that the `aov()` is an extension of the `t-test()`.  The approach is again based upon ranks. Here is an example data set we've used once before based on air quality measured across five different months.
+
+```{r}
+airquality |>
+  select( Month, Ozone ) |> 
+  mutate( Month = factor( Month ) ) |> 
+  mutate( Month = fct_recode(Month, 
+                             May="5",
+                             Jun="6",
+                             Jul="7",
+                             Aug="8",
+                             Sep="9" )) |> 
+  filter( !is.na( Ozone )) -> df.air 
+```
 
 
+## Kruskal-Wallis Data
 
-## Non-Parametric ANOVA
+```{r}
+df.air |>
+  ggplot(aes(Month, Ozone) ) + 
+  geom_boxplot(notch=TRUE)
+```
+
+## Kruskal-Wallis Tests 
+
+To test for the equality of ozone across months, we use `kruskal.test()` 
+
+```{r}
+fit <- kruskal.test( Ozone ~ Month, data=df.air )
+fit 
+```
+
+## Contained Values
 
 
+As for other analyses, the object returned has a number of elements that may be helpful in writing about the analysis.
+
+```{r}
+names(fit)
+```
 
 
 
