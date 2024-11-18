@@ -1,40 +1,490 @@
 ---
-title: "Title"
+title: "Counting Statistics"
 subtitle: "&nbsp;"
 author: Rodney Dyer, PhD
-format: revealjs
+format: 
+  revealjs:
+    echo: true
 ---
 
 
-
-# Main Title {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
-
-
-
-## {background-image="media/workflow.png" background-size="initial" background-position="center"}
-
-
-
-# Context {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+```{r}
+library( tidyverse )
+library( knitr )
+library( kableExtra )
+```
 
 
 
-# Import {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+# Non-Parametrics {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
 
 
 
-# Transform {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+## {background-image="media/AnalysisMatrix.png" background-size="600px, cover" background-position="center"}
 
 
 
-# Visualize {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+# Binomial {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+
+
+## The Binomial
+
+For cases where we have things that can be put into two groups.
+
+$$
+P(x=K|N,p) = \frac{N!}{ K! (N-K)!}p^K(1-p)^{N-K}
+$$
+
+
+:::: {.columns}
+
+::: {.column width="50%"}
+![](media/catfish.png)
+:::
+
+::: {.column width="50%"}
+Used as the *generative function* for Bayesian Inferences.
+:::
+
+::::
+
+
+## The Binomial Test 
+
+Can be used to test if a set of data are equivallent to an expectation given by the underlying probability of seeing an item in "Group 1" (catfish in this example):
+
+&nbsp;
+
+
+$H_O: p = \hat{p}$
+
+
+&nbsp;
+
+For this, the test statistics is defined as the number of observations in "Group 1" (e.g., $N_{catfish}$ in this example), and what we know about the probability of selecting items that have two distinct states is used to evaluate the likelihood of getting $N_{catfish}$.
 
 
 
-# Communicate {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+## The Data
+
+Borrowing from a previous example, let's assume we are sampling fish in the James River.  The hypothesis is that the frequency of catfish is 
+
+$$
+p_{catfish} = \frac{N_{catfish}}{N_{catfish} + N_{other}} = \frac{37}{50} \approx 0.74
+$$
+
+So if if we have another set of sample, we can test the null hypothesis:
+
+$H_O: p = 0.74$
+
+Using the new counts of $N_{catfish}$ and $N_{otehr}$.
+
+## Built-In Testing Function
+
+`R` has a direct function for this:
+
+![](media/binomial_signature.png)
+&nbsp;
+
+That allows testing two-tailed or single-sided alternative hypotheses.
+
+
+## Example With New Data
+
+So, let's assume you went out and sampled new data and found
+
+```{r echo=TRUE}
+catfish <- 52
+non_catfish <- 47 
+```
+
+::: {.fragment}
+
+&nbsp;
+
+
+To test if this sampling exercise is consistent with the previous assumption of a 74% catfish presence, we can specify the data as:
+
+
+```{r}
+samples <- c( catfish, non_catfish )
+p_catfish <- 0.74
+```
+
+:::
+
+
+## The Binomial Test
+
+
+```{r}
+fit <- binom.test( samples, p = p_catfish)
+fit
+```
+
+<font color="red">Conclusion?</font>
+
+
+## Contained Data
+
+As normal, the object that is returned by the function has all the necessary items for you to include the data into your manuscript.
+
+```{r}
+names(fit)
+```
 
 
 
+## Multinomial Extension
+
+When we have more than two unique states, we can extend the Binomial test to a more generalized *Multinomial* expansion.  This would be used to test the hypothesis about specific probabilities for $K-1$ states (the number of independently assorting groups).  However, this is a specific version of a more generalilzed approach using Contingency Tables and I won't be going over it here.  
+
+However, there are a few libraries in `R` available if you'd prefer to use the multinomial expansion.
+
+
+# Contingency Table Tests {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+
+
+## Contingency Tables
+
+Contingency tables are another counting approach, where your data can be classified into one or more categories. Often it is taken as a comparison between populations.  So, in keeping with our fish theme, let's assume we went to another river and did another sampling run on catfish.  In general, we are not limited to "Group A" vs "Group B" but we will use it for continuity here.  
+
+![](media/ContingencyTable.png)
+
+## Nomenclature
+
+This is defined as an $RxC$ Contingency Table, where $R$ is the number of Rows and $C$ is the number of columns.  
+
+In this example, I am going to assume that the rows are independent sampling events and the columns represent the grouping of individual sample observations.
+
+## Underlying Hypothesis
+
+For this, we are assuming that the observations in the row are taken from a larger background population.
+
+- $p_{catfish,\; pop1} = \frac{O_{11}}{n_1}$
+- $p_{other,\; pop1} = \frac{O_{12}}{n_1}$
+- $p_{catfish} + p_{other} = 1.0$
+
+::: {.fragment}
+The same applies for samples from *Population 2*.
+
+
+$H_O: p_{catfish, \; pop1} = p_{catfish, \; pop2}$
+
+:::
+
+## Larger Configurations
+
+If we had more than just two Groups, we expand these to the vector of probabilities by row.
+
+$H_O: \vec{p}_i = \vec{p}_j$
+
+&nbsp;
+
+And the same applies for more than just two rows.
+
+
+## Test Statistic
+
+The test statistic for this is based upon:
+
+> The distance between the observed and expectations for the data.
+
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Observed**
+
+The count of items in each combination of categories.
+ - $O_{11}$, $O_{21}$, etc.
+:::
+
+::: {.column width="50%"}
+**Expected**
+
+Based on number of categories **OR** external information.
+:::
+::::
+
+
+## Observed Values - Example Data 
+
+Let's assume I went out and sampled 50 more fishes and my overall data are now:
+
+```{r}
+Observed <- matrix( c(52, 47, 32, 18), nrow=2, byrow = TRUE)
+rownames( Observed ) <- c("Population 1", "Population 2")
+colnames( Observed ) <- c("Catfish", "Other")
+Observed
+```
+
+
+
+
+## Defining Expectations - No Information 
+
+If we have no data, and the underlying hypothesis is that samples may be put into any of the Groups randomly (e.g., the underlying assumption that all fish species have equal abundance), then the expecation is that the frequencies of observations would be $\frac{1}{K}$, where $K$ is the number of groups.
+
+
+## Expectations - No Information 
+
+```{r}
+n1 <- 52 + 47
+n2 <- 32 + 18 
+Expected <- matrix( c( 0.5 * n1, 
+                       0.5 * n1, 
+                       0.5 * n2,
+                       0.5 * n2), nrow=2, byrow = TRUE)
+rownames( Expected ) <- c("Population 1", "Population 2")
+colnames( Expected ) <- c("Catfish", "Other")
+Expected
+```
+
+
+
+
+## Expecations - Prior Information
+
+In this example, we have a prior expectation that: 
+
+$$
+p_{catfish} = 0.74
+$$  
+
+$$
+p_{other} = 1.0 - 0.74 = 0.26
+$$
+
+## Expecations - Prior Information
+
+
+```{r}
+Expected <- matrix( c( 0.74 * n1, 
+                       (1-0.74) * n1, 
+                       0.74 * n2,
+                       (1-0.74) * n2), nrow=2, byrow = TRUE)
+rownames( Expected ) <- c("Population 1", "Population 2")
+colnames( Expected ) <- c("Catfish", "Other")
+Expected
+```
+
+
+
+## Observations and Expectations
+
+The test statistic should measure how close the data in these two matrices are.
+
+&nbsp;
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+Observed
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+Expected
+```
+:::
+
+::::
+
+&nbsp;
+
+- Small deviations $\to$ no differences and failure to reject $H_O$.  
+- Big deviations $\to$ rejection of $H_O$.
+
+
+## Test Statistic
+
+This is based upon an approximation to the $\chi^2$ distribution, which is well behaved and described for counting data.
+
+&nbsp;
+
+$$
+T = \sum_{i=1}^r\sum_{j=1}^c\frac{(O_{ij} - E_{ij})^2}{E_{ij}}
+$$
+
+
+## Estimating Directly 
+
+I'm going to show you how to estimate this from the raw count data so we can get an example where you have to look up the probability for an underlying distribution.  There is a `chisq.test()` function, but you have to be *very careful* that you have it set up properly for contingency table analyses.
+
+::: {.fragment}
+
+```{r}
+T <- sum( (Observed - Expected)^2 / Expected  )
+T
+```
+
+:::
+
+## Rejecting the Null Hypothesis
+
+The general contingency table approach is based upon $df = (r-1)(c-1)$ independent elements and is distributed as a $\chi^2$ random variable.  In a classic 'hypothesis testing' framework with $\alpha = 0.05$, we would estimate the critical value of the test statistic as:
+
+```{r}
+alpha <- 0.05
+p <- 1.0 - alpha 
+critical_value <- qchisq(p, df=1 )
+critical_value
+```
+
+
+
+## The Probability of the Test Statistic
+
+To get the actual probabilty associated with $T =$`r format(T, digits=4)`, we pass the test statistic to the quantile function for the $\chi^2$ distribution.
+
+```{r}
+p.value <- 1.0 - pchisq( T, df=1 )
+p.value
+```
+
+
+## Tabulating Data
+
+```{r, echo=FALSE}
+df <- data.frame( Sample = 1:149,
+                  Species = factor( c( rep("Catfish", 52), rep("Other", 47), 
+                                       rep("Catfish", 32), rep("Other",18) ) ),
+                  Site = factor( c( rep("Population 1", 99), rep("Population 2", 50))),
+                  Measurement = rnorm(149,mean=12, sd=3))
+head(df)
+```
+
+
+## Tabulating Data 
+
+The `table()` function can take the columns of factors and provide for you the observed matrix of counts.  If you name your factors descriptively, it will take care of the row and column headers for you.
+
+```{r}
+table( df$Site, df$Species ) -> Obs
+Obs
+```
+
+
+
+# Non-Parametric Equivallence {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+
+
+# What do we do when our data are not normal?
+
+
+
+## Non-Parametric Analyses
+
+There are equivallent tests (ok, not equivallent but can be used to answer a similar question) that do not have assumptions of normality, homoscedasticity, etc. 
+
+::: {.fragment}
+
+::: {.callout-important}
+These are largely based upon Ranks and Combinatory Theory.  
+
+You gain the applicability with a *potential loss* of information (and hence statistical power).
+:::
+
+
+All of these methods are based upon ranks.
+
+::: 
+
+
+
+## Non-Parametric Correlation 
+
+The normal `cor.test()` function has an option to swap out the Pearson-Product Moment approach for one based on Ranks.     
+
+![](media/cor.test_signature.png)
+
+
+## Example Comparison
+
+I'm going to use the *Iris* data set to look at a correlation for relatively poorly behaved data.
+
+```{r echo=FALSE}
+iris |>
+  ggplot( aes(Sepal.Length, Sepal.Width) ) + 
+  geom_point( aes(color=Species))  + 
+  stat_smooth( method="lm", formula = "y~x", se=FALSE )
+```
+
+
+
+## Example Comparison
+
+```{r}
+fit_pearson <- cor.test( iris$Sepal.Length, iris$Sepal.Width )
+fit_kendall <- cor.test( iris$Sepal.Length, iris$Sepal.Width, method = "kendall" )
+fit_spearman <- cor.test( iris$Sepal.Length, iris$Sepal.Width, method = "spearman" )
+data.frame( Model=c("Pearson","Kendall","Spearman"), 
+            Parameter = c("r","tau","rho"),
+            R = c(fit_pearson$estimate, fit_kendall$estimate, fit_spearman$estimate),
+            P = c(fit_pearson$p.value, fit_kendall$p.value, fit_spearman$p.value ) ) -> df 
+```
+
+## Example Comparison
+
+Here is the difference in the models (the ties impacted the Spearman p.value estimate).
+
+```{r}
+df |>
+  kable( digits = 3, row.names = FALSE) |> 
+  kable_classic(  full_width=FALSE )
+```
+
+
+
+
+
+
+
+
+## Non-Parametric Regression 
+
+There are a few different methods for estimating linear regression models via non-parametric approaches.  However, they'd require a bit more background on counting statistics and I'm going to pass on this here. 
+
+If you need to do non-parametric regression, come see me and we'll spend a bit of time getting the foundation set for it.
+
+## Non-Parametric T-Test: Mann-Whitney {.smaller}
+
+
+This is an extension of the `t-test` for the equivalence of the mean values of two data sets (e.g., $H_O: \bar{x} = \bar{y}$).  
+
+
+## Mann-Whitney Assumptions
+
+This approach has the following assumptions:
+
+1. Both sets of data are random samples from their respective population.  
+2. Each of the populations are similarly independent.
+3. The measurement scale for each variable is at least ordinal (e.g., you can put them in order).  
+
+
+## Example Data - Mann-Whitney
+
+```{r}
+mtcars |>
+  select( Transmission = am, MPG = mpg ) |>
+  mutate( Transmission = as.factor( Transmission ) ) |>
+  mutate( Transmission = fct_recode( Transmission, "Automatic"="0", "Manual"="1")) -> data
+
+data |>
+  ggplot( aes(Transmission, MPG) )  + 
+  geom_boxplot( notch=TRUE )
+```
+
+
+
+
+
+
+
+## Non-Parametric ANOVA
 
 
 
@@ -43,7 +493,7 @@ format: revealjs
 ## Questions?
 
 ::: {layout-ncol="2"}
-If you have any questions, please feel free to either post them as an "Issue" on your copy of this GitHub Repository, post to the [Canvas](https://canvas.vcu.edu) discussion board for the class, or drop me an [email](mailto://rjdyer@vcu.edu).
+If you have any questions, please feel free to post to the [Canvas](https://canvas.vcu.edu) discussion board for the class, or drop me an [email](mailto://rjdyer@vcu.edu).
 
 ![](media/peter_sellers.gif){.middle fig-alt="Peter Sellers looking bored" fig-align="center" width="500"}
 :::
@@ -61,118 +511,6 @@ If you have any questions, please feel free to either post them as an "Issue" on
 
 
 
-
-
-
-
-
-
-
-
-
-
-<!---
-
-Stuff that is basic layouts.
-
-
-
-## Bullets
-
-When you click the **Render** button a document will be generated that includes:
-
--   Content authored with markdown
--   Output from executable code
-
-
-## Two Columns Specified
-
-
-:::: {.columns}
-
-::: {.column width="50%"}
-stuff
-:::
-
-::: {.column width="50%"}
-::: {.fragment}
-stuff
-:::
-:::
-
-::::
-
-## Some Title
-
-::: {layout-ncol="2"}
-### List One
-
--   Item A
--   Item B
--   Item C
-
-### List Two
-
--   Item X
--   Item Y
--   Item Z
-:::
-
-## Another Slide
-
-::: {layout-ncol="2"}
-### The code
-
-```{r eval=FALSE, echo=TRUE}
-hist( rnorm(1200) )
-```
-
-### The Plot
-
-```{r echo=FALSE}
-hist( rnorm( 1200 ) )
-```
-:::
-
-## And another slide
-
-::: {layout-ncol="2"}
--   Item X
--   Item Y
--   Item Z
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur gravida eu erat et fring. Morbi congue augue vel eros ullamcorper, eget convallis tortor sagittis. Fusce sodales viverra mauris a fringilla. Donec feugiat, justo eu blandit placerat, enim dui volutpat turpis, eu dictum lectus urna eu urna. Mauris sed massa ornare, interdum ipsum a, semper massa.
-:::
-
-## Code
-
-When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r echo=TRUE}
-px <- 0.75
-py <- 0.25
-m <- 0.1
-ret <- rep(NA,100)
-ret[1] <- py
-for( i in 2:100) {
-  ret[i] <- (1-m)*ret[(i-1)] + px * m   
-}
-```
-
-## Results
-
-```{r}
-plot( ret, type="l")
-```
-
-
-
-
-
-
-
-
----> 
 
 
 

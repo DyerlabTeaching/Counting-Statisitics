@@ -197,7 +197,8 @@ In the real world, you'll probably be taking the data from a larger `data.frame`
 df <- data.frame( Sample = 1:149,
                   Species = factor( c( rep("Catfish", 52), rep("Other", 47), 
                                        rep("Catfish", 32), rep("Other",18) ) ),
-                  Site = factor( c( rep("Population 1", 99), rep("Population 2", 50))) )
+                  Site = factor( c( rep("Population 1", 99), rep("Population 2", 50))),
+                  Measurement = rnorm(149,mean=12, sd=3))
 summary( df )
 ```
 ```{r}
@@ -216,7 +217,7 @@ There are a few caveats that we need to make here.  First, this appraoch require
 
 ## Methods Based on Ranks
 
-I'm going to use a couple of examples here to show how we can use counting statistics and ranks for methods where we intended to use parametric approaches like a t-test, correaltion, regression, and analysis of variance but the data were not suitable for those methods.
+I'm going to use a couple of examples here to show how we can use counting statistics and ranks for methods where we intended to use parametric approaches like a t-test, correlation, regression, and analysis of variance but the data were not suitable for those methods.
 
 
 
