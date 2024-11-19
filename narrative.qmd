@@ -215,7 +215,7 @@ There are a few caveats that we need to make here.  First, this appraoch require
 
 
 
-## Methods Based on Ranks
+## NonParametric Eqivallent Approaches
 
 I'm going to use a couple of examples here to show how we can use counting statistics and ranks for methods where we intended to use parametric approaches like a t-test, correlation, regression, and analysis of variance but the data were not suitable for those methods.
 
@@ -231,6 +231,161 @@ When we discussed correlation data (e.g., continuous predictors and response var
 This approach, basically, orders the magnitude of both predictor and response and assigns a rank (e.g., $1^{st}, 2^{nd}, \ldots N^{th}$) for both variables and then estimates the relationship by correlating the ranked values instead of the raw values.
 
 For brevity, I'll not give an example and have you look back at the correlation lecture for more information.
+
+
+## Non-Parametric Regression 
+
+There are a few different methods for estimating linear regression models via non-parametric approaches.  We've seen one common approach whenever we used the `stat_smooth()` function in `ggplot()`.  By default, it uses the `loess()` local smoother approach.
+
+
+```{r}
+iris |> 
+  ggplot( aes(Sepal.Length, Sepal.Width) ) + 
+  geom_point() + 
+  stat_smooth()
+```
+
+
+In a `lm()`, the goal is to use least cost approaches to minimize the error variance across all the data simultaneously.  
+
+![](media/lm_error.png)
+
+### **LO**cal regr**ESS**ion 
+
+The `loess()` approach looks at a local window for estimating the formula of the line along with a moderatly high-dimensional polynomial.
+
+$$
+\hat{y} = \hat{\beta}_O^{x} + \hat{\beta}_1^{x}x_i
+$$
+
+The function has a signature similar to that we saw in `lm()` for normal [regression](https://dyerlabteaching.github.io/Regression/narrative.html).  
+
+![](media/loess_signature.png)
+
+Notice the optional value for `span`, which defines the size of the local window.
+
+```{r echo=FALSE}
+tricube <- function(x, delta = 0.1) {
+  ifelse(abs(x) < delta, (1 - abs(x)^3)^3, 0)
+}
+set.seed(1)
+n <- 101
+x <- seq(0, 1, length.out = n)
+fx <- sin(2 * pi * x)
+y <- fx + rnorm(n, sd = 0.5)
+
+# define x* and color for window
+xstar <- 0.3
+cols <- rgb(190/255,190/255,190/255,alpha=0.5)
+
+# set-up 2 x 2 subplot
+par(mfrow = c(2,2))
+
+# loop through spans (0.1, 0.2, 0.3, 0.4)
+for(s in c(0.1, 0.2, 0.3, 0.4)){
+  
+  # plot data and true function
+  plot(x, y, main = paste0("span = ", s), ylim = c(-2.5, 2.5),
+       cex.lab = 1.5, cex.axis = 1.25)
+  lines(x, fx, col = "blue", lwd = 2)
+  
+  # plot window
+  window <- c(xstar - s / 2, xstar + s / 2)
+  rect(window[1], -3, window[2], 3, col = cols)
+  
+  # define weights
+  w <- tricube(x - xstar, delta = s / 2)
+  
+  # plot estimate
+  X <- cbind(1, x - 0.5, (x - 0.5)^2)
+  X.w <- sqrt(w) * X
+  y.w <- sqrt(w) * y
+  beta <- solve(crossprod(X.w)) %*% crossprod(X.w, y.w)
+  ystar <- as.numeric(cbind(1, xstar - 0.5, (xstar - 0.5)^2) %*% beta)
+  points(xstar, ystar, pch = 17, col = "red", cex = 1)
+  
+  # add regression line
+  lines(x, X %*% beta, lty = 4, col="orange")
+  
+  # add legend
+  legend("topright", legend = c("data", "truth"),
+         pch = c(1, NA), lty = c(NA, 1), col = c("black", "blue"), bty = "n")
+  legend("bottomright", legend = c("estimate", "window"),
+         pch = c(17, 15), col = c("red", "gray"), bty = "n")
+  
+}
+```
+
+
+### Fitting A loess Model
+
+```{r}
+fit <- loess( Sepal.Width ~ Sepal.Length, data=iris)
+fit
+```
+
+Let's look at the consequence of the span parameter.
+
+```{r}
+loess.spans <- function(x, y, s){
+  nobs <- length(y)
+  xs <- sort(x, index.return = TRUE)
+  x <- xs$x
+  y <- y[xs$ix]
+  lo <- loess(y ~ x, span = s)
+  data.frame(Sepal.Length = x, Sepal.Width = lo$fitted, span = s)
+}
+
+
+rbind( loess.spans( iris$Sepal.Length, iris$Sepal.Width, s = 0.2 ),
+       loess.spans( iris$Sepal.Length, iris$Sepal.Width, s = 0.3 ),
+       loess.spans( iris$Sepal.Length, iris$Sepal.Width, s = 0.4 ),
+       loess.spans( iris$Sepal.Length, iris$Sepal.Width, s = 0.5 ),
+       loess.spans( iris$Sepal.Length, iris$Sepal.Width, s = 0.6 ),
+       loess.spans( iris$Sepal.Length, iris$Sepal.Width, s = 0.7 ),
+       loess.spans( iris$Sepal.Length, iris$Sepal.Width, s = 0.8 ) )  |> 
+  mutate( span = factor( span, ordered=TRUE )) |>
+  ggplot( aes(Sepal.Length, Sepal.Width) ) + 
+  geom_point( data = iris, ) + 
+  geom_line( aes(color = span ), lwd=1)  
+```
+
+One method suggested to figure out what an optimal value of `span` would be is based upon a generalized cross validation (GCV) approach.  
+
+$$
+s = \frac{ \frac{1}{N} \sum_{i=1}^N (y_i - \hat{y}_{i,s})^2 }{ (1 - \frac{v_s}{n} )^2 }
+$$
+
+where $v_s = \sum_{i=1}^N h_{ii,s}$ is the trace of the idempotent $\mathbf{H}$ [Hat Matrix](https://www.sciencedirect.com/topics/mathematics/hat-matrix).
+
+Here is a function that does this for the general loess model.
+
+```{r}
+loess.gcv <- function(x, y){
+  nobs <- length(y)
+  xs <- sort(x, index.return = TRUE)
+  x <- xs$x
+  y <- y[xs$ix]
+  tune.loess <- function(s){
+    lo <- loess(y ~ x, span = s)
+    mean((lo$fitted - y)^2) / (1 - lo$trace.hat/nobs)^2
+  }
+  os <- optimize(tune.loess, interval = c(.01, 99))$minimum
+  lo <- loess(y ~ x, span = os)
+  data.frame(Sepal.Length = x, Sepal.Width = lo$fitted, span = os)
+}
+
+rbind( loess.gcv( iris$Sepal.Length, iris$Sepal.Width ),
+       loess.spans( iris$Sepal.Length, iris$Sepal.Width, s = 0.75 ) ) |> 
+  mutate( span = factor(round(span,digits = 2))) |>
+  ggplot( aes(Sepal.Length, Sepal.Width, color=span) ) + 
+  geom_line() 
+```
+
+
+## Other Regression Approaches
+
+There are several additional approaches including Kernel Regression (e.g., [Nadaraya & Watson's Kernel Smoother](https://bookdown.org/egarpor/PM-UC3M/npreg-kre.html)) and Local Averaging (e.g., [Friedman's Super Smoother](http://fmwww.bc.edu/repec/bocode/s/supsmooth_doc.pdf)).  If you need to perform a regression approach, please explore the benefits and challenges with these alternative methods before deciding on which one to use.
 
 
 

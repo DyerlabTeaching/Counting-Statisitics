@@ -441,15 +441,6 @@ df |>
 
 
 
-
-
-
-## Non-Parametric Regression 
-
-There are a few different methods for estimating linear regression models via non-parametric approaches.  However, they'd require a bit more background on counting statistics and I'm going to pass on this here. 
-
-If you need to do non-parametric regression, come see me and we'll spend a bit of time getting the foundation set for it.
-
 ## Non-Parametric T-Test: Wilcoxon Test
 
 
