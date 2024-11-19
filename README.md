@@ -19,8 +19,8 @@ At the end of this topic, you should be able to:
 
 This topic is supported by the following material assets.
 
- - [Slides](https://dyerlabteaching.github.io/Counting-Statistics/slides.html)
- - [Longer Background Narrative](https://dyerlabteaching.github.io/Counting-Statistics/narrative.html)
+ - [Slides](https://dyerlabteaching.github.io/Counting-Statisitics/slides.html#/)
+ - [Longer Background Narrative](https://dyerlabteaching.github.io/Counting-Statisitics/narrative.html)
 
 ### Assessment Tools
 
