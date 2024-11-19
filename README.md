@@ -25,10 +25,9 @@ This topic is supported by the following material assets.
 ### Assessment Tools
 
 The ability of participants to understand, practice, and demonstrate mastery of a topic can be evaluated using both direct and indirect methods.  These will come in a variety of formats.
-- [Homework Assigmnent](homework.html)
+- [Homework Assigmnent](https://dyerlabteaching.github.io/Counting-Statisitics/homework.html)
 
 ## Contact Information
 
 If you need to contact me, I am available at:  
  - Email: rjdyer@vcu.edu
- - Twitter: [@dyerlab](https://twitter.com/dyerlab/)
