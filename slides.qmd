@@ -1,6 +1,6 @@
 ---
 title: "Counting Statistics"
-subtitle: "&nbsp;"
+subtitle: "And Non-Parametric Equivalents"
 author: Rodney Dyer, PhD
 format: 
   revealjs:
@@ -8,15 +8,16 @@ format:
 ---
 
 
-```{r}
+
+# Non-Parametrics {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+
+
+
+```{r echo=FALSE}
 library( tidyverse )
 library( knitr )
 library( kableExtra )
 ```
-
-
-
-# Non-Parametrics {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
 
 
 
@@ -39,7 +40,7 @@ $$
 :::: {.columns}
 
 ::: {.column width="50%"}
-![](media/catfish.png)
+![](media/catfish.png){width=45%}
 :::
 
 ::: {.column width="50%"}
@@ -49,7 +50,7 @@ Used as the *generative function* for Bayesian Inferences.
 ::::
 
 
-## The Binomial Test 
+## The Binomial Test  {.smaller}
 
 Can be used to test if a set of data are equivallent to an expectation given by the underlying probability of seeing an item in "Group 1" (catfish in this example):
 
@@ -65,7 +66,7 @@ For this, the test statistics is defined as the number of observations in "Group
 
 
 
-## The Data
+## The Data {.smaller}
 
 Borrowing from a previous example, let's assume we are sampling fish in the James River.  The hypothesis is that the frequency of catfish is 
 
@@ -77,7 +78,7 @@ So if if we have another set of sample, we can test the null hypothesis:
 
 $H_O: p = 0.74$
 
-Using the new counts of $N_{catfish}$ and $N_{otehr}$.
+Using the new counts of $N_{catfish}$ and $N_{other}$.
 
 ## Built-In Testing Function
 
@@ -145,9 +146,9 @@ However, there are a few libraries in `R` available if you'd prefer to use the m
 # Contingency Table Tests {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
 
 
-## Contingency Tables
+## Contingency Tables {.smaller}
 
-Contingency tables are another counting approach, where your data can be classified into one or more categories. Often it is taken as a comparison between populations.  So, in keeping with our fish theme, let's assume we went to another river and did another sampling run on catfish.  In general, we are not limited to "Group A" vs "Group B" but we will use it for continuity here.  
+Contingency tables are another counting approach, where your data can be classified into one or more categories. Often it is taken as a comparison between populations.  So, in keeping with our fish theme, let's assume we went to another river and did another sampling run on catfish.  
 
 ![](media/ContingencyTable.png)
 
@@ -155,7 +156,7 @@ Contingency tables are another counting approach, where your data can be classif
 
 This is defined as an $RxC$ Contingency Table, where $R$ is the number of Rows and $C$ is the number of columns.  
 
-In this example, I am going to assume that the rows are independent sampling events and the columns represent the grouping of individual sample observations.
+
 
 ## Underlying Hypothesis
 
@@ -372,13 +373,13 @@ Obs
 # Non-Parametric Equivallence {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
 
 
-# What do we do when our data are not normal?
+# What do we do when our data are not normal or heteroscedastistic?
 
 
 
 ## Non-Parametric Analyses
 
-There are equivallent tests (ok, not equivallent but can be used to answer a similar question) that do not have assumptions of normality, homoscedasticity, etc. 
+There are equivalent tests (ok, not equivallent but can be used to answer a similar question) that do not have assumptions of normality, homoscedasticity, etc. 
 
 ::: {.fragment}
 
@@ -387,10 +388,6 @@ These are largely based upon Ranks and Combinatory Theory.
 
 You gain the applicability with a *potential loss* of information (and hence statistical power).
 :::
-
-
-All of these methods are based upon ranks.
-
 ::: 
 
 
@@ -499,7 +496,7 @@ names(fit)
 
 
 
-## Non-Parametric ANOVA - Kruskal-Wallis
+## Non-Parametric ANOVA {.smaller}
 
 The Kruskal-Wallis test is an extension on the Wilcoxon test in the same way that the `aov()` is an extension of the `t-test()`.  The approach is again based upon ranks. Here is an example data set we've used once before based on air quality measured across five different months.
 
